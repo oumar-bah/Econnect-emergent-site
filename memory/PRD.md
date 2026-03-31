@@ -1,51 +1,52 @@
 # Econnect VTC - Product Requirements Document
 
 ## Original Problem Statement
-Améliorer le site internet VTC econnect-vtc.com avec:
+Améliorer le site VTC econnect-vtc.com avec:
 - Design luxueux noir et doré
-- Système de connexion clients et administrateur
-- Partie admin pour envoyer les courses aux chauffeurs
-- Toutes les options: Google Maps, notifications email
+- Système de connexion clients/chauffeurs/admin
+- Admin pour envoyer les courses aux chauffeurs
+- Système de tarification par gamme de véhicule avec tarif minimum
 
 ## User Personas
-- **Clients**: Réservation de courses VTC
+- **Clients**: Réservation de courses VTC avec choix de gamme
 - **Chauffeurs**: Réception et gestion des courses assignées
-- **Administrateur**: Gestion globale (chauffeurs, courses, clients)
-
-## Core Requirements
-- Design luxueux noir (#0A0A0A) et doré (#D4AF37)
-- Authentification JWT (email/password)
-- 3 rôles utilisateurs (client, driver, admin)
-- Dashboard admin avec statistiques
-- Assignation des courses aux chauffeurs
-- Notifications dashboard + email (SendGrid)
+- **Administrateur**: Gestion globale (chauffeurs, courses, clients, tarifs)
 
 ## What's Been Implemented (Jan 2026)
 
 ### Backend (FastAPI + MongoDB)
-- **Auth System**: JWT tokens, bcrypt hashing, role-based access
-- **User Management**: Registration, login, logout, session management
-- **Booking System**: CRUD operations, status workflow (pending → assigned → in_progress → completed)
-- **Admin APIs**: Stats, assign bookings, manage drivers, view clients
-- **Driver APIs**: View assigned bookings, update status, availability toggle
-- **Email Service**: SendGrid integration for driver notifications
+- **Auth System**: JWT tokens (24h), bcrypt hashing, 3 rôles
+- **Booking System**: CRUD, workflow status, prix estimé
+- **Vehicle Categories**: 4 gammes par défaut, CRUD admin
+- **Price Estimation**: Calcul automatique avec tarif minimum
+- **Email Service**: SendGrid prêt pour notifications
 
 ### Frontend (React + Tailwind)
-- **Landing Page**: Hero, Services (bento grid), Booking form, Testimonials, Footer, WhatsApp button
-- **Auth Pages**: Login, Register with validation
-- **Client Dashboard**: Stats, booking history, new booking form
-- **Driver Dashboard**: Assigned courses, status updates, availability toggle
-- **Admin Dashboard**: 
-  - Stats overview (total bookings, pending, drivers, clients)
-  - Bookings management with driver assignment modal
-  - Drivers management (CRUD)
-  - Clients list
+- **Landing Page**: Hero, Services, Booking, Testimonials, Footer, WhatsApp
+- **Auth Pages**: Login, Register
+- **Client Dashboard**: Stats, historique, nouvelle réservation avec sélection véhicule
+- **Driver Dashboard**: Courses assignées, status, disponibilité
+- **Admin Dashboard**: Stats, réservations, chauffeurs, clients, **tarifs**
 
-### Tech Stack
-- Backend: FastAPI, Motor (async MongoDB), PyJWT, bcrypt, SendGrid
-- Frontend: React 19, Tailwind CSS, Framer Motion, Phosphor Icons
-- Database: MongoDB
-- Auth: JWT with httpOnly cookies
+### Système de Tarification
+| Gamme | Prix/km | Tarif Minimum |
+|-------|---------|---------------|
+| Berline | 2.50€ | 25.00€ |
+| Van | 3.00€ | 35.00€ |
+| Luxe | 4.00€ | 50.00€ |
+| Green | 2.80€ | 30.00€ |
+
+**Logique**: Si `distance × prix/km < tarif_minimum` alors `prix_final = tarif_minimum`
+
+### API Endpoints
+
+#### Public
+- GET /api/vehicle-categories - Catégories actives
+- POST /api/estimate-price?distance_km=X - Estimation prix
+
+#### Admin
+- GET/POST/PUT/DELETE /api/admin/vehicle-categories
+- Toutes les routes existantes (stats, bookings, drivers, clients)
 
 ## Test Credentials
 - **Admin**: admin@econnect-vtc.com / admin123
@@ -57,40 +58,20 @@ Améliorer le site internet VTC econnect-vtc.com avec:
 - [x] Système d'authentification
 - [x] Dashboards client/driver/admin
 - [x] Assignation des courses
+- [x] Système de tarification par gamme
 
 ### P1 (Important)
-- [ ] Intégration Google Maps API (clé requise)
-- [ ] Notifications email SendGrid (clé requise)
+- [ ] Intégration Google Maps API pour calcul distance auto
+- [ ] Notifications email SendGrid
 - [ ] Numéro WhatsApp réel
-- [ ] Coordonnées contact réelles
 
 ### P2 (Nice to have)
 - [ ] Google OAuth login
-- [ ] Calcul de tarif automatique
-- [ ] Historique des courses complet
+- [ ] Historique complet des courses
 - [ ] Notifications push
-- [ ] Mode sombre/clair
+- [ ] Export factures PDF
 
-## API Endpoints
-
-### Auth
-- POST /api/auth/register
-- POST /api/auth/login
-- POST /api/auth/logout
-- GET /api/auth/me
-
-### Admin
-- GET /api/admin/stats
-- GET /api/admin/bookings
-- PUT /api/admin/bookings/{id}/assign
-- GET/POST/DELETE /api/admin/drivers
-- GET /api/admin/clients
-
-### Driver
-- GET /api/driver/bookings
-- PUT /api/driver/bookings/{id}/status
-- PUT /api/driver/availability
-
-### Client
-- POST /api/bookings
-- GET /api/bookings/my
+## Tech Stack
+- Backend: FastAPI, Motor (MongoDB), PyJWT, bcrypt, SendGrid
+- Frontend: React 19, Tailwind CSS, Framer Motion, Phosphor Icons
+- Database: MongoDB
