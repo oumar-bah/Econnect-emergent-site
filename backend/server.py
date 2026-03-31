@@ -96,6 +96,10 @@ class BookingBase(BaseModel):
     pickup_date: str
     pickup_time: str
     transfer_type: str  # simple, retour, disposition
+    vehicle_category_id: Optional[str] = None
+    distance_km: Optional[float] = None
+    duration_minutes: Optional[float] = None
+    estimated_price: Optional[float] = None
     notes: Optional[str] = None
 
 class BookingCreate(BookingBase):
@@ -117,6 +121,11 @@ class BookingResponse(BaseModel):
     pickup_date: str
     pickup_time: str
     transfer_type: str
+    vehicle_category_id: Optional[str] = None
+    vehicle_category_name: Optional[str] = None
+    distance_km: Optional[float] = None
+    duration_minutes: Optional[float] = None
+    estimated_price: Optional[float] = None
     notes: Optional[str] = None
     status: str  # pending, assigned, in_progress, completed, cancelled
     driver_id: Optional[str] = None
@@ -138,6 +147,46 @@ class StatsResponse(BaseModel):
     total_clients: int
     total_drivers: int
     available_drivers: int
+
+# ==================== VEHICLE & PRICING MODELS ====================
+
+class VehicleCategory(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    name: str  # e.g., "Berline", "Van", "Luxe"
+    description: str
+    price_per_km: float  # Prix par kilomètre en euros
+    min_fare: float  # Tarif minimum
+    image_url: Optional[str] = None
+    is_active: bool = True
+    order: int = 0  # Pour l'ordre d'affichage
+
+class VehicleCategoryCreate(BaseModel):
+    name: str
+    description: str
+    price_per_km: float
+    min_fare: float
+    image_url: Optional[str] = None
+    order: int = 0
+
+class VehicleCategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price_per_km: Optional[float] = None
+    min_fare: Optional[float] = None
+    image_url: Optional[str] = None
+    is_active: Optional[bool] = None
+    order: Optional[int] = None
+
+class PriceEstimate(BaseModel):
+    category_id: str
+    category_name: str
+    distance_km: float
+    duration_minutes: float
+    base_price: float
+    final_price: float
+    min_fare: float
+    price_per_km: float
 
 # ==================== AUTH HELPERS ====================
 
@@ -334,6 +383,13 @@ async def get_me(request: Request):
 async def create_booking(booking: BookingCreate, request: Request):
     user = await get_current_user(request)
     
+    # Get vehicle category name if provided
+    vehicle_category_name = None
+    if booking.vehicle_category_id:
+        category = await db.vehicle_categories.find_one({"id": booking.vehicle_category_id})
+        if category:
+            vehicle_category_name = category["name"]
+    
     booking_id = str(uuid.uuid4())
     booking_doc = {
         "id": booking_id,
@@ -350,6 +406,11 @@ async def create_booking(booking: BookingCreate, request: Request):
         "pickup_date": booking.pickup_date,
         "pickup_time": booking.pickup_time,
         "transfer_type": booking.transfer_type,
+        "vehicle_category_id": booking.vehicle_category_id,
+        "vehicle_category_name": vehicle_category_name,
+        "distance_km": booking.distance_km,
+        "duration_minutes": booking.duration_minutes,
+        "estimated_price": booking.estimated_price,
         "notes": booking.notes,
         "status": "pending",
         "driver_id": None,
@@ -538,6 +599,97 @@ async def get_all_clients(request: Request):
     clients = await db.users.find({"role": "client"}, {"_id": 0, "password_hash": 0}).to_list(100)
     return [UserResponse(**c) for c in clients]
 
+# ==================== VEHICLE CATEGORIES ROUTES ====================
+
+@api_router.get("/vehicle-categories", response_model=List[VehicleCategory])
+async def get_vehicle_categories():
+    """Get all active vehicle categories (public endpoint)"""
+    categories = await db.vehicle_categories.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(100)
+    return [VehicleCategory(**c) for c in categories]
+
+@api_router.get("/admin/vehicle-categories", response_model=List[VehicleCategory])
+async def get_all_vehicle_categories(request: Request):
+    """Get all vehicle categories including inactive (admin only)"""
+    await require_admin(request)
+    categories = await db.vehicle_categories.find({}, {"_id": 0}).sort("order", 1).to_list(100)
+    return [VehicleCategory(**c) for c in categories]
+
+@api_router.post("/admin/vehicle-categories", response_model=VehicleCategory)
+async def create_vehicle_category(category: VehicleCategoryCreate, request: Request):
+    await require_admin(request)
+    
+    category_id = str(uuid.uuid4())
+    category_doc = {
+        "id": category_id,
+        "name": category.name,
+        "description": category.description,
+        "price_per_km": category.price_per_km,
+        "min_fare": category.min_fare,
+        "image_url": category.image_url,
+        "is_active": True,
+        "order": category.order
+    }
+    
+    await db.vehicle_categories.insert_one(category_doc)
+    category_doc.pop("_id", None)
+    return VehicleCategory(**category_doc)
+
+@api_router.put("/admin/vehicle-categories/{category_id}", response_model=VehicleCategory)
+async def update_vehicle_category(category_id: str, category: VehicleCategoryUpdate, request: Request):
+    await require_admin(request)
+    
+    existing = await db.vehicle_categories.find_one({"id": category_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Catégorie non trouvée")
+    
+    update_data = {k: v for k, v in category.model_dump().items() if v is not None}
+    if update_data:
+        await db.vehicle_categories.update_one({"id": category_id}, {"$set": update_data})
+    
+    updated = await db.vehicle_categories.find_one({"id": category_id}, {"_id": 0})
+    return VehicleCategory(**updated)
+
+@api_router.delete("/admin/vehicle-categories/{category_id}")
+async def delete_vehicle_category(category_id: str, request: Request):
+    await require_admin(request)
+    
+    result = await db.vehicle_categories.delete_one({"id": category_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Catégorie non trouvée")
+    
+    return {"message": "Catégorie supprimée"}
+
+# ==================== PRICE ESTIMATION ROUTE ====================
+
+@api_router.post("/estimate-price", response_model=List[PriceEstimate])
+async def estimate_price(distance_km: float, duration_minutes: float = 0):
+    """
+    Calculate price estimates for all vehicle categories based on distance.
+    Returns price for each category with minimum fare applied.
+    """
+    if distance_km <= 0:
+        raise HTTPException(status_code=400, detail="La distance doit être positive")
+    
+    categories = await db.vehicle_categories.find({"is_active": True}, {"_id": 0}).sort("order", 1).to_list(100)
+    
+    estimates = []
+    for cat in categories:
+        base_price = distance_km * cat["price_per_km"]
+        final_price = max(base_price, cat["min_fare"])
+        
+        estimates.append(PriceEstimate(
+            category_id=cat["id"],
+            category_name=cat["name"],
+            distance_km=round(distance_km, 2),
+            duration_minutes=round(duration_minutes, 0),
+            base_price=round(base_price, 2),
+            final_price=round(final_price, 2),
+            min_fare=cat["min_fare"],
+            price_per_km=cat["price_per_km"]
+        ))
+    
+    return estimates
+
 # ==================== ROOT ROUTE ====================
 
 @api_router.get("/")
@@ -568,6 +720,7 @@ async def startup_event():
     await db.bookings.create_index("client_id")
     await db.bookings.create_index("driver_id")
     await db.bookings.create_index("status")
+    await db.vehicle_categories.create_index("id", unique=True)
     
     # Seed admin user
     admin_email = os.environ.get("ADMIN_EMAIL", "admin@econnect-vtc.com")
@@ -593,6 +746,54 @@ async def startup_event():
         )
         logger.info("Admin password updated")
     
+    # Seed default vehicle categories if none exist
+    existing_categories = await db.vehicle_categories.count_documents({})
+    if existing_categories == 0:
+        default_categories = [
+            {
+                "id": str(uuid.uuid4()),
+                "name": "Berline",
+                "description": "Confort et elegance pour vos trajets quotidiens. Mercedes Classe E, BMW Serie 5.",
+                "price_per_km": 2.50,
+                "min_fare": 25.00,
+                "image_url": "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400",
+                "is_active": True,
+                "order": 1
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "name": "Van",
+                "description": "Ideal pour les groupes jusqu'a 7 personnes. Mercedes Classe V, Volkswagen Caravelle.",
+                "price_per_km": 3.00,
+                "min_fare": 35.00,
+                "image_url": "https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=400",
+                "is_active": True,
+                "order": 2
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "name": "Luxe",
+                "description": "Experience premium avec vehicules haut de gamme. Mercedes Classe S, BMW Serie 7.",
+                "price_per_km": 4.00,
+                "min_fare": 50.00,
+                "image_url": "https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=400",
+                "is_active": True,
+                "order": 3
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "name": "Green",
+                "description": "Vehicules electriques et hybrides pour un transport eco-responsable. Tesla Model S, Mercedes EQS.",
+                "price_per_km": 2.80,
+                "min_fare": 30.00,
+                "image_url": "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=400",
+                "is_active": True,
+                "order": 4
+            }
+        ]
+        await db.vehicle_categories.insert_many(default_categories)
+        logger.info("Default vehicle categories created")
+    
     # Write test credentials
     credentials_path = Path("/app/memory/test_credentials.md")
     credentials_path.parent.mkdir(parents=True, exist_ok=True)
@@ -617,6 +818,14 @@ async def startup_event():
 - POST /api/admin/drivers - Create driver
 - DELETE /api/admin/drivers/{{id}} - Delete driver
 - GET /api/admin/clients - All clients
+- GET /api/admin/vehicle-categories - All vehicle categories
+- POST /api/admin/vehicle-categories - Create category
+- PUT /api/admin/vehicle-categories/{{id}} - Update category
+- DELETE /api/admin/vehicle-categories/{{id}} - Delete category
+
+## Public Endpoints
+- GET /api/vehicle-categories - Active vehicle categories
+- POST /api/estimate-price?distance_km=X - Estimate prices
 
 ## Driver Endpoints
 - GET /api/driver/bookings - Driver's bookings
@@ -626,6 +835,12 @@ async def startup_event():
 ## Client Endpoints
 - POST /api/bookings - Create booking
 - GET /api/bookings/my - My bookings
+
+## Default Vehicle Categories
+- Berline: 2.50€/km, min 25€
+- Van: 3.00€/km, min 35€
+- Luxe: 4.00€/km, min 50€
+- Green: 2.80€/km, min 30€
 """)
     logger.info("Test credentials written to /app/memory/test_credentials.md")
 

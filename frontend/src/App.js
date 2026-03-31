@@ -24,6 +24,7 @@ import AdminDashboard from "@/pages/admin/AdminDashboard";
 import AdminBookings from "@/pages/admin/AdminBookings";
 import AdminDrivers from "@/pages/admin/AdminDrivers";
 import AdminClients from "@/pages/admin/AdminClients";
+import AdminPricing from "@/pages/admin/AdminPricing";
 
 function App() {
   useEffect(() => {
@@ -70,6 +71,7 @@ function App() {
           <Route path="/admin/bookings" element={<ProtectedRoute role="admin"><AdminBookings /></ProtectedRoute>} />
           <Route path="/admin/drivers" element={<ProtectedRoute role="admin"><AdminDrivers /></ProtectedRoute>} />
           <Route path="/admin/clients" element={<ProtectedRoute role="admin"><AdminClients /></ProtectedRoute>} />
+          <Route path="/admin/pricing" element={<ProtectedRoute role="admin"><AdminPricing /></ProtectedRoute>} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

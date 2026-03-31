@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  House, CalendarCheck, Car, Users, SignOut, List, X, ChartBar, CarSimple, UserCircle
+  House, CalendarCheck, Car, Users, SignOut, List, X, ChartBar, CarSimple, UserCircle, CurrencyEur
 } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 
@@ -26,6 +26,7 @@ const DashboardLayout = ({ children, title }) => {
           { name: 'Réservations', path: '/admin/bookings', icon: CalendarCheck },
           { name: 'Chauffeurs', path: '/admin/drivers', icon: CarSimple },
           { name: 'Clients', path: '/admin/clients', icon: Users },
+          { name: 'Tarifs', path: '/admin/pricing', icon: CurrencyEur },
         ];
       case 'driver':
         return [

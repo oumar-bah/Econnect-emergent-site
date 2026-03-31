@@ -5,7 +5,7 @@ import sys
 import json
 from datetime import datetime, timedelta
 
-class VTCAPITester:
+class VTCPricingTester:
     def __init__(self, base_url="https://driver-platform-28.preview.emergentagent.com"):
         self.base_url = base_url
         self.session = requests.Session()
@@ -33,14 +33,6 @@ class VTCAPITester:
         url = f"{self.base_url}/api/{endpoint}"
         headers = {'Content-Type': 'application/json'}
         
-        # Add authentication if needed
-        if use_admin and self.admin_token:
-            headers['Authorization'] = f'Bearer {self.admin_token}'
-        elif use_client and self.client_token:
-            headers['Authorization'] = f'Bearer {self.client_token}'
-        elif use_driver and self.driver_token:
-            headers['Authorization'] = f'Bearer {self.driver_token}'
-
         try:
             if method == 'GET':
                 response = self.session.get(url, headers=headers)
@@ -56,331 +48,302 @@ class VTCAPITester:
             print(f"Request failed: {str(e)}")
             return None
 
-    def test_root_endpoint(self):
-        """Test root API endpoint"""
-        response = self.make_request('GET', '')
-        success = response and response.status_code == 200
-        details = f"Status: {response.status_code if response else 'No response'}"
-        self.log_test("Root API endpoint", success, details)
-        return success
-
-    def test_admin_login(self):
-        """Test admin login"""
-        data = {
-            "email": "admin@econnect-vtc.com",
-            "password": "admin123"
-        }
-        response = self.make_request('POST', 'auth/login', data)
+    def admin_login(self):
+        """Login as admin"""
+        print("\n🔐 Admin Login...")
+        response = self.make_request('POST', 'auth/login', {
+            'email': 'admin@econnect-vtc.com',
+            'password': 'admin123'
+        })
         
         if response and response.status_code == 200:
-            try:
-                user_data = response.json()
-                if user_data.get('role') == 'admin':
-                    # Extract token from cookies if available
-                    if 'access_token' in response.cookies:
-                        self.admin_token = response.cookies['access_token']
-                    self.log_test("Admin login", True)
-                    return True
-                else:
-                    self.log_test("Admin login", False, f"Wrong role: {user_data.get('role')}")
-                    return False
-            except:
-                self.log_test("Admin login", False, "Invalid JSON response")
-                return False
+            print("✅ Admin login successful")
+            return True
         else:
-            details = f"Status: {response.status_code if response else 'No response'}"
-            if response:
-                try:
-                    error_detail = response.json().get('detail', 'Unknown error')
-                    details += f", Error: {error_detail}"
-                except:
-                    pass
-            self.log_test("Admin login", False, details)
+            print(f"❌ Admin login failed: {response.status_code if response else 'No response'}")
             return False
 
-    def test_client_registration(self):
-        """Test client registration"""
-        timestamp = datetime.now().strftime("%H%M%S")
-        data = {
-            "email": f"testclient{timestamp}@test.com",
-            "password": "testpass123",
-            "name": f"Test Client {timestamp}",
-            "phone": "0612345678"
-        }
-        response = self.make_request('POST', 'auth/register', data)
+    def test_public_vehicle_categories(self):
+        """Test GET /api/vehicle-categories returns 4 default categories"""
+        print("\n📋 Testing Public Vehicle Categories...")
+        response = self.make_request('GET', 'vehicle-categories')
         
-        if response and response.status_code == 200:
-            try:
-                user_data = response.json()
-                if user_data.get('role') == 'client':
-                    # Extract token from cookies if available
-                    if 'access_token' in response.cookies:
-                        self.client_token = response.cookies['access_token']
-                    self.log_test("Client registration", True)
-                    return True
-                else:
-                    self.log_test("Client registration", False, f"Wrong role: {user_data.get('role')}")
-                    return False
-            except:
-                self.log_test("Client registration", False, "Invalid JSON response")
-                return False
-        else:
-            details = f"Status: {response.status_code if response else 'No response'}"
-            if response:
-                try:
-                    error_detail = response.json().get('detail', 'Unknown error')
-                    details += f", Error: {error_detail}"
-                except:
-                    pass
-            self.log_test("Client registration", False, details)
+        if not response:
+            self.log_test("GET /api/vehicle-categories", False, "No response")
             return False
-
-    def test_admin_stats(self):
-        """Test admin stats endpoint"""
-        response = self.make_request('GET', 'admin/stats', use_admin=True)
         
-        if response and response.status_code == 200:
+        success = response.status_code == 200
+        if success:
             try:
-                stats = response.json()
-                required_fields = ['total_bookings', 'pending_bookings', 'total_clients', 'total_drivers']
-                if all(field in stats for field in required_fields):
-                    self.log_test("Admin stats", True)
-                    return True
+                categories = response.json()
+                expected_names = ["Berline", "Van", "Luxe", "Green"]
+                expected_prices = {
+                    "Berline": {"price_per_km": 2.50, "min_fare": 25.00},
+                    "Van": {"price_per_km": 3.00, "min_fare": 35.00},
+                    "Luxe": {"price_per_km": 4.00, "min_fare": 50.00},
+                    "Green": {"price_per_km": 2.80, "min_fare": 30.00}
+                }
+                
+                if len(categories) >= 4:
+                    self.log_test("GET /api/vehicle-categories returns 4+ categories", True)
+                    
+                    found_names = [cat.get('name') for cat in categories]
+                    for expected in expected_names:
+                        if expected in found_names:
+                            cat = next(c for c in categories if c['name'] == expected)
+                            expected_data = expected_prices[expected]
+                            
+                            price_ok = abs(cat['price_per_km'] - expected_data['price_per_km']) < 0.01
+                            min_fare_ok = abs(cat['min_fare'] - expected_data['min_fare']) < 0.01
+                            
+                            if price_ok and min_fare_ok:
+                                self.log_test(f"{expected} category has correct pricing", True)
+                            else:
+                                self.log_test(f"{expected} category pricing", False, 
+                                            f"Expected {expected_data}, got {cat['price_per_km']}/{cat['min_fare']}")
+                        else:
+                            self.log_test(f"Default category {expected} exists", False, "Category not found")
                 else:
-                    missing = [f for f in required_fields if f not in stats]
-                    self.log_test("Admin stats", False, f"Missing fields: {missing}")
-                    return False
-            except:
-                self.log_test("Admin stats", False, "Invalid JSON response")
-                return False
+                    self.log_test("GET /api/vehicle-categories returns 4+ categories", False, 
+                                f"Only {len(categories)} categories found")
+            except Exception as e:
+                self.log_test("Parse vehicle categories response", False, str(e))
         else:
-            details = f"Status: {response.status_code if response else 'No response'}"
-            self.log_test("Admin stats", False, details)
+            self.log_test("GET /api/vehicle-categories", False, f"Status {response.status_code}")
+        
+        return success
+
+    def test_price_estimation(self):
+        """Test POST /api/estimate-price calculates prices correctly"""
+        print("\n💰 Testing Price Estimation...")
+        
+        test_cases = [
+            {"distance": 5.0, "description": "Short distance (5km)"},
+            {"distance": 15.0, "description": "Medium distance (15km)"},
+            {"distance": 50.0, "description": "Long distance (50km)"}
+        ]
+        
+        all_passed = True
+        for case in test_cases:
+            response = self.make_request('POST', f'estimate-price?distance_km={case["distance"]}&duration_minutes=30')
+            
+            if not response or response.status_code != 200:
+                self.log_test(f"Price estimation - {case['description']}", False, 
+                            f"Status {response.status_code if response else 'No response'}")
+                all_passed = False
+                continue
+            
+            try:
+                estimates = response.json()
+                if len(estimates) >= 4:
+                    self.log_test(f"Price estimation returns estimates - {case['description']}", True)
+                    
+                    # Verify minimum fare logic
+                    for estimate in estimates:
+                        expected_base = case['distance'] * estimate['price_per_km']
+                        expected_final = max(expected_base, estimate['min_fare'])
+                        
+                        if abs(estimate['final_price'] - expected_final) < 0.01:
+                            self.log_test(f"Minimum fare applied correctly - {estimate['category_name']} at {case['distance']}km", True)
+                        else:
+                            self.log_test(f"Minimum fare logic - {estimate['category_name']}", False,
+                                        f"Expected {expected_final}, got {estimate['final_price']}")
+                            all_passed = False
+                else:
+                    self.log_test(f"Price estimation completeness - {case['description']}", False, 
+                                f"Only {len(estimates)} estimates")
+                    all_passed = False
+            except Exception as e:
+                self.log_test(f"Parse price estimates - {case['description']}", False, str(e))
+                all_passed = False
+        
+        return all_passed
+
+    def test_admin_vehicle_categories_crud(self):
+        """Test admin CRUD operations for vehicle categories"""
+        print("\n🔧 Testing Admin Vehicle Categories CRUD...")
+        
+        if not self.admin_login():
+            self.log_test("Admin login for CRUD tests", False, "Login failed")
             return False
-
-    def test_admin_bookings(self):
-        """Test admin bookings endpoint"""
-        response = self.make_request('GET', 'admin/bookings', use_admin=True)
         
-        success = response and response.status_code == 200
-        details = f"Status: {response.status_code if response else 'No response'}"
-        if success:
-            try:
-                bookings = response.json()
-                if isinstance(bookings, list):
-                    details += f", Found {len(bookings)} bookings"
-                else:
-                    success = False
-                    details += ", Response is not a list"
-            except:
-                success = False
-                details += ", Invalid JSON response"
+        # Test GET admin categories
+        response = self.make_request('GET', 'admin/vehicle-categories')
+        if not response or response.status_code != 200:
+            self.log_test("GET /api/admin/vehicle-categories", False, 
+                        f"Status {response.status_code if response else 'No response'}")
+            return False
         
-        self.log_test("Admin bookings list", success, details)
-        return success
-
-    def test_admin_drivers(self):
-        """Test admin drivers endpoint"""
-        response = self.make_request('GET', 'admin/drivers', use_admin=True)
+        self.log_test("GET /api/admin/vehicle-categories", True)
+        original_categories = response.json()
         
-        success = response and response.status_code == 200
-        details = f"Status: {response.status_code if response else 'No response'}"
-        if success:
-            try:
-                drivers = response.json()
-                if isinstance(drivers, list):
-                    details += f", Found {len(drivers)} drivers"
-                else:
-                    success = False
-                    details += ", Response is not a list"
-            except:
-                success = False
-                details += ", Invalid JSON response"
-        
-        self.log_test("Admin drivers list", success, details)
-        return success
-
-    def test_admin_clients(self):
-        """Test admin clients endpoint"""
-        response = self.make_request('GET', 'admin/clients', use_admin=True)
-        
-        success = response and response.status_code == 200
-        details = f"Status: {response.status_code if response else 'No response'}"
-        if success:
-            try:
-                clients = response.json()
-                if isinstance(clients, list):
-                    details += f", Found {len(clients)} clients"
-                else:
-                    success = False
-                    details += ", Response is not a list"
-            except:
-                success = False
-                details += ", Invalid JSON response"
-        
-        self.log_test("Admin clients list", success, details)
-        return success
-
-    def test_create_driver(self):
-        """Test creating a new driver"""
-        timestamp = datetime.now().strftime("%H%M%S")
-        data = {
-            "email": f"driver{timestamp}@test.com",
-            "name": f"Test Driver {timestamp}",
-            "phone": "0612345678",
-            "password": "driverpass123",
-            "vehicle_model": "Mercedes Classe E",
-            "vehicle_plate": f"AB-{timestamp[-3:]}-CD"
+        # Test CREATE
+        new_category = {
+            "name": "Test Category",
+            "description": "Test category for automated testing",
+            "price_per_km": 3.50,
+            "min_fare": 40.00,
+            "order": 99
         }
-        response = self.make_request('POST', 'admin/drivers', data, use_admin=True)
         
+        response = self.make_request('POST', 'admin/vehicle-categories', new_category)
         if response and response.status_code == 200:
-            try:
-                driver_data = response.json()
-                if driver_data.get('role') == 'driver' and driver_data.get('email') == data['email']:
-                    self.log_test("Create driver", True)
-                    return driver_data
-                else:
-                    self.log_test("Create driver", False, "Invalid driver data returned")
-                    return None
-            except:
-                self.log_test("Create driver", False, "Invalid JSON response")
-                return None
+            self.log_test("Admin can create new vehicle category", True)
+            created_category = response.json()
+            created_id = created_category.get('id')
         else:
-            details = f"Status: {response.status_code if response else 'No response'}"
-            if response:
-                try:
-                    error_detail = response.json().get('detail', 'Unknown error')
-                    details += f", Error: {error_detail}"
-                except:
-                    pass
-            self.log_test("Create driver", False, details)
-            return None
+            self.log_test("Admin can create new vehicle category", False, 
+                        f"Status {response.status_code if response else 'No response'}")
+            return False
+        
+        # Test UPDATE
+        update_data = {
+            "price_per_km": 4.00,
+            "min_fare": 45.00
+        }
+        
+        response = self.make_request('PUT', f'admin/vehicle-categories/{created_id}', update_data)
+        if response and response.status_code == 200:
+            updated_category = response.json()
+            if abs(updated_category['price_per_km'] - 4.00) < 0.01:
+                self.log_test("Admin can update vehicle category (price, min fare)", True)
+            else:
+                self.log_test("Admin can update vehicle category (price, min fare)", False, "Price not updated")
+        else:
+            self.log_test("Admin can update vehicle category (price, min fare)", False, 
+                        f"Status {response.status_code if response else 'No response'}")
+        
+        # Test TOGGLE ACTIVE/INACTIVE
+        toggle_data = {"is_active": False}
+        response = self.make_request('PUT', f'admin/vehicle-categories/{created_id}', toggle_data)
+        if response and response.status_code == 200:
+            self.log_test("Admin can toggle category active/inactive", True)
+        else:
+            self.log_test("Admin can toggle category active/inactive", False, 
+                        f"Status {response.status_code if response else 'No response'}")
+        
+        # Test DELETE
+        response = self.make_request('DELETE', f'admin/vehicle-categories/{created_id}')
+        if response and response.status_code == 200:
+            self.log_test("Admin can delete vehicle category", True)
+        else:
+            self.log_test("Admin can delete vehicle category", False, 
+                        f"Status {response.status_code if response else 'No response'}")
+        
+        return True
 
-    def test_client_booking(self):
-        """Test creating a client booking"""
-        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
-        data = {
+    def test_client_booking_with_vehicle_selection(self):
+        """Test client booking with vehicle selection and price estimation"""
+        print("\n📝 Testing Client Booking with Vehicle Selection...")
+        
+        # Register test client
+        test_email = f"test_client_{datetime.now().strftime('%H%M%S')}@test.com"
+        client_data = {
+            "email": test_email,
+            "name": "Test Client",
+            "phone": "+33123456789",
+            "password": "testpass123"
+        }
+        
+        response = self.make_request('POST', 'auth/register', client_data)
+        if not response or response.status_code != 200:
+            self.log_test("Client registration for booking test", False, 
+                        f"Status {response.status_code if response else 'No response'}")
+            return False
+        
+        self.log_test("Client registration for booking test", True)
+        
+        # Get vehicle categories
+        response = self.make_request('GET', 'vehicle-categories')
+        if not response or response.status_code != 200:
+            self.log_test("Get categories for booking", False, "Failed to get categories")
+            return False
+        
+        categories = response.json()
+        if not categories:
+            self.log_test("Categories available for booking", False, "No categories found")
+            return False
+        
+        # Get price estimates
+        distance = 20.0
+        response = self.make_request('POST', f'estimate-price?distance_km={distance}&duration_minutes=45')
+        if not response or response.status_code != 200:
+            self.log_test("Get price estimates for booking", False, "Failed to get estimates")
+            return False
+        
+        estimates = response.json()
+        if not estimates:
+            self.log_test("Price estimates available for booking", False, "No estimates found")
+            return False
+        
+        # Create booking with vehicle selection
+        selected_category = categories[0]
+        selected_estimate = estimates[0]
+        
+        booking_data = {
             "pickup_address": "123 Rue de la Paix, Paris",
-            "dropoff_address": "456 Avenue des Champs-Élysées, Paris",
-            "pickup_date": tomorrow,
+            "dropoff_address": "456 Avenue des Champs, Paris",
+            "pickup_date": "25/12/2024",
             "pickup_time": "14:30",
             "transfer_type": "simple",
-            "notes": "Test booking"
+            "vehicle_category_id": selected_category['id'],
+            "distance_km": distance,
+            "duration_minutes": 45,
+            "estimated_price": selected_estimate['final_price'],
+            "notes": "Test booking from automated test"
         }
-        response = self.make_request('POST', 'bookings', data, use_client=True)
         
+        response = self.make_request('POST', 'bookings', booking_data)
         if response and response.status_code == 200:
-            try:
-                booking_data = response.json()
-                if booking_data.get('status') == 'pending':
-                    self.log_test("Create client booking", True)
-                    return booking_data
-                else:
-                    self.log_test("Create client booking", False, f"Wrong status: {booking_data.get('status')}")
-                    return None
-            except:
-                self.log_test("Create client booking", False, "Invalid JSON response")
-                return None
+            booking = response.json()
+            
+            # Verify booking saved with correct data
+            if (booking.get('vehicle_category_id') == selected_category['id'] and 
+                abs(booking.get('estimated_price', 0) - selected_estimate['final_price']) < 0.01):
+                self.log_test("Booking is saved with vehicle_category_id and estimated_price", True)
+            else:
+                self.log_test("Booking is saved with vehicle_category_id and estimated_price", False, 
+                            "Missing or incorrect vehicle/price data")
         else:
-            details = f"Status: {response.status_code if response else 'No response'}"
-            if response:
-                try:
-                    error_detail = response.json().get('detail', 'Unknown error')
-                    details += f", Error: {error_detail}"
-                except:
-                    pass
-            self.log_test("Create client booking", False, details)
-            return None
-
-    def test_client_bookings_list(self):
-        """Test client bookings list"""
-        response = self.make_request('GET', 'bookings/my', use_client=True)
-        
-        success = response and response.status_code == 200
-        details = f"Status: {response.status_code if response else 'No response'}"
-        if success:
-            try:
-                bookings = response.json()
-                if isinstance(bookings, list):
-                    details += f", Found {len(bookings)} bookings"
-                else:
-                    success = False
-                    details += ", Response is not a list"
-            except:
-                success = False
-                details += ", Invalid JSON response"
-        
-        self.log_test("Client bookings list", success, details)
-        return success
-
-    def test_auth_me(self):
-        """Test auth/me endpoint"""
-        response = self.make_request('GET', 'auth/me', use_admin=True)
-        
-        if response and response.status_code == 200:
-            try:
-                user_data = response.json()
-                if user_data.get('email') == 'admin@econnect-vtc.com':
-                    self.log_test("Auth me endpoint", True)
-                    return True
-                else:
-                    self.log_test("Auth me endpoint", False, f"Wrong email: {user_data.get('email')}")
-                    return False
-            except:
-                self.log_test("Auth me endpoint", False, "Invalid JSON response")
-                return False
-        else:
-            details = f"Status: {response.status_code if response else 'No response'}"
-            self.log_test("Auth me endpoint", False, details)
+            self.log_test("Client can select vehicle category when booking", False, 
+                        f"Status {response.status_code if response else 'No response'}")
             return False
+        
+        return True
 
     def run_all_tests(self):
-        """Run all backend tests"""
-        print("🚀 Starting VTC Backend API Tests...")
+        """Run all VTC pricing system tests"""
+        print("🚗 VTC Pricing System API Testing")
         print("=" * 50)
         
-        # Test basic connectivity
-        if not self.test_root_endpoint():
-            print("❌ Basic connectivity failed, stopping tests")
-            return False
+        tests = [
+            ("Public Vehicle Categories", self.test_public_vehicle_categories),
+            ("Price Estimation", self.test_price_estimation),
+            ("Admin Vehicle Categories CRUD", self.test_admin_vehicle_categories_crud),
+            ("Client Booking with Vehicle Selection", self.test_client_booking_with_vehicle_selection)
+        ]
         
-        # Test authentication
-        if not self.test_admin_login():
-            print("❌ Admin login failed, stopping admin tests")
-            return False
-        
-        # Test admin endpoints
-        self.test_admin_stats()
-        self.test_admin_bookings()
-        self.test_admin_drivers()
-        self.test_admin_clients()
-        self.test_auth_me()
-        
-        # Test driver creation
-        driver = self.test_create_driver()
-        
-        # Test client registration and booking
-        if self.test_client_registration():
-            booking = self.test_client_booking()
-            self.test_client_bookings_list()
+        for test_name, test_func in tests:
+            print(f"\n{'='*20} {test_name} {'='*20}")
+            try:
+                test_func()
+            except Exception as e:
+                self.log_test(f"{test_name} (Exception)", False, str(e))
         
         # Print summary
-        print("\n" + "=" * 50)
-        print(f"📊 Test Summary: {self.tests_passed}/{self.tests_run} passed")
+        print(f"\n{'='*50}")
+        print(f"📊 Final Results: {self.tests_passed}/{self.tests_run} tests passed")
+        print(f"Success rate: {(self.tests_passed/self.tests_run*100):.1f}%")
         
         if self.failed_tests:
-            print("\n❌ Failed Tests:")
-            for test in self.failed_tests:
-                print(f"  - {test['test']}: {test['details']}")
-        
-        if self.passed_tests:
-            print(f"\n✅ Passed Tests: {', '.join(self.passed_tests)}")
+            print(f"\n❌ Failed Tests:")
+            for failed in self.failed_tests:
+                print(f"  - {failed['test']}: {failed['details']}")
         
         return self.tests_passed == self.tests_run
 
 def main():
-    tester = VTCAPITester()
+    tester = VTCPricingTester()
     success = tester.run_all_tests()
     return 0 if success else 1
 

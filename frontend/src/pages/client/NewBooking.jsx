@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { MapPin, Calendar, Clock, ArrowRight, CircleNotch, CheckCircle } from '@phosphor-icons/react';
+import { MapPin, Calendar, Clock, ArrowRight, CircleNotch, CheckCircle, Car, CurrencyEur } from '@phosphor-icons/react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -26,6 +26,50 @@ const NewBooking = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  
+  // Vehicle & pricing
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [distance, setDistance] = useState('');
+  const [duration, setDuration] = useState('');
+  const [priceEstimates, setPriceEstimates] = useState([]);
+  const [estimatingPrice, setEstimatingPrice] = useState(false);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/vehicle-categories`);
+      setCategories(response.data);
+    } catch (error) { console.error('Error:', error); }
+  };
+
+  const estimatePrice = async () => {
+    if (!distance || parseFloat(distance) <= 0) return;
+    
+    setEstimatingPrice(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/estimate-price?distance_km=${parseFloat(distance)}&duration_minutes=${parseFloat(duration) || 0}`
+      );
+      setPriceEstimates(response.data);
+    } catch (error) { 
+      console.error('Error:', error); 
+    } finally {
+      setEstimatingPrice(false);
+    }
+  };
+
+  useEffect(() => {
+    if (distance && parseFloat(distance) > 0) {
+      const timer = setTimeout(() => estimatePrice(), 500);
+      return () => clearTimeout(timer);
+    } else {
+      setPriceEstimates([]);
+    }
+  }, [distance, duration]);
 
   const timeSlots = [];
   for (let h = 0; h < 24; h++) {
@@ -33,6 +77,11 @@ const NewBooking = () => {
       timeSlots.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
     }
   }
+
+  const getSelectedPrice = () => {
+    if (!selectedCategory || priceEstimates.length === 0) return null;
+    return priceEstimates.find(e => e.category_id === selectedCategory);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,6 +94,8 @@ const NewBooking = () => {
       return;
     }
 
+    const selectedPrice = getSelectedPrice();
+
     try {
       await axios.post(`${API_URL}/api/bookings`, {
         pickup_address: pickup,
@@ -52,6 +103,10 @@ const NewBooking = () => {
         pickup_date: format(date, 'dd/MM/yyyy', { locale: fr }),
         pickup_time: time,
         transfer_type: transferType,
+        vehicle_category_id: selectedCategory,
+        distance_km: distance ? parseFloat(distance) : null,
+        duration_minutes: duration ? parseFloat(duration) : null,
+        estimated_price: selectedPrice?.final_price || null,
         notes: notes
       }, { withCredentials: true });
 
@@ -78,13 +133,15 @@ const NewBooking = () => {
 
   return (
     <DashboardLayout title="Nouvelle Reservation">
-      <div className="max-w-2xl mx-auto">
-        <div className="glass rounded-xl p-6 md:p-8" data-testid="new-booking-form">
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Form */}
+        <div className="lg:col-span-2 glass rounded-xl p-6 md:p-8" data-testid="new-booking-form">
           {error && (
             <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-lg mb-6">{error}</div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Date & Time */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-[#A1A1AA]">Date *</Label>
@@ -115,6 +172,7 @@ const NewBooking = () => {
               </div>
             </div>
 
+            {/* Addresses */}
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-[#A1A1AA]">Adresse de depart *</Label>
@@ -133,6 +191,36 @@ const NewBooking = () => {
               </div>
             </div>
 
+            {/* Distance & Duration (manual input for now, can be auto with Google Maps) */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[#A1A1AA]">Distance estimee (km)</Label>
+                <Input 
+                  type="number" 
+                  step="0.1"
+                  min="0"
+                  value={distance} 
+                  onChange={(e) => setDistance(e.target.value)} 
+                  placeholder="Ex: 15.5" 
+                  className="bg-[#1E1E1E] border-white/10" 
+                  data-testid="distance-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[#A1A1AA]">Duree estimee (min)</Label>
+                <Input 
+                  type="number"
+                  min="0"
+                  value={duration} 
+                  onChange={(e) => setDuration(e.target.value)} 
+                  placeholder="Ex: 30" 
+                  className="bg-[#1E1E1E] border-white/10"
+                  data-testid="duration-input"
+                />
+              </div>
+            </div>
+
+            {/* Transfer Type */}
             <div className="space-y-2">
               <Label className="text-[#A1A1AA]">Type de transfert *</Label>
               <Select value={transferType} onValueChange={setTransferType}>
@@ -147,15 +235,100 @@ const NewBooking = () => {
               </Select>
             </div>
 
+            {/* Vehicle Category Selection */}
+            {priceEstimates.length > 0 && (
+              <div className="space-y-3">
+                <Label className="text-[#A1A1AA]">Choisir votre vehicule</Label>
+                <div className="grid sm:grid-cols-2 gap-3" data-testid="vehicle-selection">
+                  {priceEstimates.map((estimate) => {
+                    const category = categories.find(c => c.id === estimate.category_id);
+                    const isSelected = selectedCategory === estimate.category_id;
+                    return (
+                      <div 
+                        key={estimate.category_id}
+                        onClick={() => setSelectedCategory(estimate.category_id)}
+                        className={`p-4 rounded-xl cursor-pointer transition-all ${
+                          isSelected 
+                            ? 'bg-[#D4AF37]/20 border-2 border-[#D4AF37]' 
+                            : 'bg-[#1E1E1E] border-2 border-transparent hover:border-white/20'
+                        }`}
+                        data-testid={`vehicle-${estimate.category_id}`}
+                      >
+                        <div className="flex items-start gap-3">
+                          {category?.image_url ? (
+                            <img src={category.image_url} alt={estimate.category_name} className="w-16 h-12 object-cover rounded" />
+                          ) : (
+                            <Car size={32} className="text-[#D4AF37]" />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-bold">{estimate.category_name}</p>
+                            <p className="text-xs text-[#A1A1AA]">{estimate.price_per_km.toFixed(2)}€/km</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xl font-bold text-[#D4AF37]">{estimate.final_price.toFixed(2)}€</p>
+                            {estimate.final_price === estimate.min_fare && (
+                              <p className="text-xs text-[#A1A1AA]">Tarif min.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
             <div className="space-y-2">
               <Label className="text-[#A1A1AA]">Notes (optionnel)</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Instructions speciales..." className="bg-[#1E1E1E] border-white/10 min-h-[100px]" data-testid="notes-input" />
+              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Instructions speciales..." className="bg-[#1E1E1E] border-white/10 min-h-[80px]" data-testid="notes-input" />
             </div>
 
             <Button type="submit" disabled={loading} className="w-full bg-[#D4AF37] hover:bg-[#F0C74A] text-[#0A0A0A] font-semibold py-6" data-testid="submit-booking">
               {loading ? <CircleNotch size={20} className="animate-spin" /> : <>Confirmer <ArrowRight size={20} className="ml-2" /></>}
             </Button>
           </form>
+        </div>
+
+        {/* Price Summary Sidebar */}
+        <div className="glass rounded-xl p-6 h-fit sticky top-24">
+          <h3 className="text-lg font-bold font-['Cormorant_Garamond'] mb-4 flex items-center gap-2">
+            <CurrencyEur size={24} className="text-[#D4AF37]" />
+            Estimation tarifaire
+          </h3>
+
+          {!distance ? (
+            <p className="text-[#A1A1AA] text-sm">Entrez la distance pour voir les tarifs.</p>
+          ) : estimatingPrice ? (
+            <div className="flex items-center gap-2 text-[#A1A1AA]">
+              <CircleNotch size={20} className="animate-spin" />
+              Calcul en cours...
+            </div>
+          ) : priceEstimates.length === 0 ? (
+            <p className="text-[#A1A1AA] text-sm">Aucune categorie disponible.</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-[#1E1E1E] rounded-lg p-4">
+                <p className="text-sm text-[#A1A1AA]">Distance</p>
+                <p className="text-xl font-bold">{parseFloat(distance).toFixed(1)} km</p>
+              </div>
+
+              {selectedCategory && getSelectedPrice() && (
+                <div className="bg-[#D4AF37]/10 border border-[#D4AF37]/50 rounded-lg p-4">
+                  <p className="text-sm text-[#A1A1AA]">Vehicule selectionne</p>
+                  <p className="font-bold">{getSelectedPrice().category_name}</p>
+                  <div className="mt-2 pt-2 border-t border-[#D4AF37]/30">
+                    <p className="text-sm text-[#A1A1AA]">Prix estime</p>
+                    <p className="text-3xl font-bold text-[#D4AF37]">{getSelectedPrice().final_price.toFixed(2)}€</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="text-xs text-[#A1A1AA]">
+                * Prix indicatif. Le tarif final peut varier selon les conditions de circulation.
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>
