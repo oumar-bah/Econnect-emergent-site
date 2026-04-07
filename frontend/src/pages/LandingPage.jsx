@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Services from "@/components/Services";
+import FleetSection from "@/components/FleetSection";
 import BookingSection from "@/components/BookingSection";
 import WhyChooseUs from "@/components/WhyChooseUs";
 import Testimonials from "@/components/Testimonials";
@@ -13,6 +14,7 @@ const LandingPage = () => {
       <Navbar />
       <Hero />
       <Services />
+      <FleetSection />
       <BookingSection />
       <WhyChooseUs />
       <Testimonials />

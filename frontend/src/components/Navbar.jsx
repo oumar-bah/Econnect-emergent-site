@@ -94,7 +94,7 @@ const Navbar = () => {
                   {GAMME_ITEMS.map((item) => (
                     <a
                       key={item}
-                      href="#services"
+                      href="#gammes"
                       className="block px-4 py-3 text-sm transition-colors duration-200 hover:bg-[#232323]"
                       style={{ color: '#C7B588' }}
                       onClick={() => setIsGammeOpen(false)}
@@ -116,8 +116,8 @@ const Navbar = () => {
               <button
                 key={lang.code}
                 onClick={() => setActiveLang(lang.code)}
-                className="text-lg leading-none p-1 rounded transition-opacity duration-200"
-                style={{ opacity: activeLang === lang.code ? 1 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+                className="text-2xl leading-none p-1 rounded transition-opacity duration-200"
+                style={{ opacity: activeLang === lang.code ? 1 : 0.5, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif" }}
                 title={lang.code.toUpperCase()}
                 data-testid={`lang-${lang.code}`}
               >
@@ -204,7 +204,7 @@ const Navbar = () => {
                   {GAMME_ITEMS.map((item) => (
                     <a
                       key={item}
-                      href="#services"
+                      href="#gammes"
                       className="py-1 text-base transition-colors duration-200"
                       style={{ color: '#C7B588' }}
                       onClick={() => setIsMobileMenuOpen(false)}
@@ -222,7 +222,7 @@ const Navbar = () => {
                     key={lang.code}
                     onClick={() => setActiveLang(lang.code)}
                     className="text-2xl"
-                    style={{ opacity: activeLang === lang.code ? 1 : 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+                    style={{ opacity: activeLang === lang.code ? 1 : 0.5, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif" }}
                   >
                     {lang.flag}
                   </button>
