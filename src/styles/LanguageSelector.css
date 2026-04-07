@@ -1,0 +1,28 @@
+.language-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.language-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.language-button:hover {
+    background-color: #f0f0f0;
+}
+
+.language-button.active {
+    background-color: #007bff;
+    color: white;
+}
+
+@media (max-width: 600px) {
+    .language-selector {
+        flex-direction: column;
+    }
+}
