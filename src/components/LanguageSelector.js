@@ -1,20 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
+import './LanguageSelector.css';
 
 const LanguageSelector = () => {
-    const [language, setLanguage] = useState('');
-
-    const handleLanguageChange = (lang) => {
-        setLanguage(lang);
-        // You can add more logic here to handle the language change
-    };
-
-    return (
-        <div>
-            <button onClick={() => handleLanguageChange('fr')}>🇫🇷 French</button>
-            <button onClick={() => handleLanguageChange('en')}>🇬🇧 English</button>
-            <button onClick={() => handleLanguageChange('es')}>🇪🇸 Spanish</button>
-        </div>
-    );
+  return (
+    <div className="language-bar">
+      <button title="Français">🇫🇷</button>
+      <button title="English">🇬🇧</button>
+      <button title="Español">🇪🇸</button>
+    </div>
+  );
 };
 
 export default LanguageSelector;
