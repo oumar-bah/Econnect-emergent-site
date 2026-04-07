@@ -196,7 +196,7 @@ const BookingSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="h-[400px] lg:h-full min-h-[500px] rounded-2xl overflow-hidden"
+            className="h-[400px] lg:h-auto rounded-2xl overflow-hidden"
           >
             <InteractiveMap />
           </motion.div>
