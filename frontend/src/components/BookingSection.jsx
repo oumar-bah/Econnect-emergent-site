@@ -64,15 +64,16 @@ const BookingSection = () => {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
           {/* Booking Form */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
+            className="h-full"
           >
-            <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 md:p-10" data-testid="booking-form">
+            <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 md:p-10 h-full" data-testid="booking-form">
               {/* Steps */}
               <div className="flex items-center justify-between mb-8">
                 {[1, 2, 3].map((step) => (
@@ -80,7 +81,7 @@ const BookingSection = () => {
                     <div className="w-10 h-10 rounded-full bg-[#D4AF37] text-[#0A0A0A] flex items-center justify-center font-bold">
                       {step}
                     </div>
-                    {step < 3 && <div className="w-12 md:w-20 h-[2px] bg-[#D4AF37]/30 mx-2" />}
+                    {step < 3 && <div className="w-12 md:w-20 h-[2px] bg-[#D4AF37]/30 mx-2" />}  
                   </div>
                 ))}
               </div>
@@ -198,7 +199,7 @@ const BookingSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="h-[400px] lg:h-full min-h-[500px] rounded-2xl overflow-hidden"
+            className="h-full rounded-2xl overflow-hidden"
           >
             <InteractiveMap />
           </motion.div>
