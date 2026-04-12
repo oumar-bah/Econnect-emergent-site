@@ -1,5 +1,6 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 // Custom gold marker
 const goldIcon = new L.Icon({
@@ -16,7 +17,7 @@ const InteractiveMap = () => {
   const parisPosition = [48.8566, 2.3522];
 
   return (
-    <div className="w-full h-full rounded-2xl overflow-hidden border border-white/10" data-testid="interactive-map">
+    <div className="w-full h-full min-h-[600px] rounded-2xl overflow-hidden border border-white/10" data-testid="interactive-map">
       <MapContainer
         center={parisPosition}
         zoom={11}
