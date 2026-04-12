@@ -64,7 +64,7 @@ const BookingSection = () => {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch min-h-[600px]">
           {/* Booking Form */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -73,112 +73,114 @@ const BookingSection = () => {
             transition={{ duration: 0.6 }}
             className="h-full"
           >
-            <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 md:p-10 h-full" data-testid="booking-form">
-              {/* Steps */}
-              <div className="flex items-center justify-between mb-8">
-                {[1, 2, 3].map((step) => (
-                  <div key={step} className="flex items-center">
-                    <div className="w-10 h-10 rounded-full bg-[#D4AF37] text-[#0A0A0A] flex items-center justify-center font-bold">
-                      {step}
+            <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 md:p-10 h-full flex flex-col justify-between" data-testid="booking-form">
+              <div className="flex flex-col gap-6">
+                {/* Steps */}
+                <div className="flex items-center justify-between">
+                  {[1, 2, 3].map((step) => (
+                    <div key={step} className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-[#D4AF37] text-[#0A0A0A] flex items-center justify-center font-bold">
+                        {step}
+                      </div>
+                      {step < 3 && <div className="w-12 md:w-20 h-[2px] bg-[#D4AF37]/30 mx-2" />}  
                     </div>
-                    {step < 3 && <div className="w-12 md:w-20 h-[2px] bg-[#D4AF37]/30 mx-2" />}  
-                  </div>
-                ))}
-              </div>
-
-              {/* Date & Time */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                <div className="space-y-2">
-                  <Label htmlFor="date" className="text-[#A1A1AA] text-sm">{t('datePriseEnCharge')}</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal bg-[#1E1E1E] border-white/10 hover:bg-[#252525] hover:border-[#D4AF37]/50"
-                        data-testid="date-picker-trigger"
-                      >
-                        <Calendar size={18} className="mr-2 text-[#D4AF37]" />
-                        {date ? format(date, 'dd/MM/yyyy', { locale: fr }) : t('choisirUneDate')}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-[#1E1E1E] border-white/10" align="start">
-                      <CalendarComponent
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
-                        className="bg-[#1E1E1E]"
-                        data-testid="calendar"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  ))}
                 </div>
 
+                {/* Date & Time */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="date" className="text-[#A1A1AA] text-sm">{t('datePriseEnCharge')}</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal bg-[#1E1E1E] border-white/10 hover:bg-[#252525] hover:border-[#D4AF37]/50"
+                          data-testid="date-picker-trigger"
+                        >
+                          <Calendar size={18} className="mr-2 text-[#D4AF37]" />
+                          {date ? format(date, 'dd/MM/yyyy', { locale: fr }) : t('choisirUneDate')}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-[#1E1E1E] border-white/10" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={date}
+                          onSelect={setDate}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className="bg-[#1E1E1E]"
+                          data-testid="calendar"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="time" className="text-[#A1A1AA] text-sm">{t('heurePriseEnCharge')}</Label>
+                    <Select value={time} onValueChange={setTime}>
+                      <SelectTrigger className="bg-[#1E1E1E] border-white/10 hover:border-[#D4AF37]/50" data-testid="time-select">
+                        <Clock size={18} className="mr-2 text-[#D4AF37]" />
+                        <SelectValue placeholder={t('choisirUneHeure')} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#1E1E1E] border-white/10 max-h-60">
+                        {timeSlots.map((slot) => (
+                          <SelectItem key={slot} value={slot} className="hover:bg-[#D4AF37]/10">
+                            {slot}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Pickup & Dropoff */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pickup" className="text-[#A1A1AA] text-sm">{t('lieuPriseEnCharge')}</Label>
+                    <div className="relative">
+                      <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D4AF37]" />
+                      <Input
+                        id="pickup"
+                        value={pickup}
+                        onChange={(e) => setPickup(e.target.value)}
+                        placeholder={t('adresseDepart')}
+                        className="pl-10 bg-[#1E1E1E] border-white/10 focus:border-[#D4AF37]/50"
+                        data-testid="pickup-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="dropoff" className="text-[#A1A1AA] text-sm">{t('lieuDepot')}</Label>
+                    <div className="relative">
+                      <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D4AF37]" />
+                      <Input
+                        id="dropoff"
+                        value={dropoff}
+                        onChange={(e) => setDropoff(e.target.value)}
+                        placeholder={t('adresseArrivee')}
+                        className="pl-10 bg-[#1E1E1E] border-white/10 focus:border-[#D4AF37]/50"
+                        data-testid="dropoff-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transfer Type */}
                 <div className="space-y-2">
-                  <Label htmlFor="time" className="text-[#A1A1AA] text-sm">{t('heurePriseEnCharge')}</Label>
-                  <Select value={time} onValueChange={setTime}>
-                    <SelectTrigger className="bg-[#1E1E1E] border-white/10 hover:border-[#D4AF37]/50" data-testid="time-select">
-                      <Clock size={18} className="mr-2 text-[#D4AF37]" />
-                      <SelectValue placeholder={t('choisirUneHeure')} />
+                  <Label className="text-[#A1A1AA] text-sm">{t('typeTransfert')}</Label>
+                  <Select value={transferType} onValueChange={setTransferType}>
+                    <SelectTrigger className="bg-[#1E1E1E] border-white/10 hover:border-[#D4AF37]/50" data-testid="transfer-type-select">
+                      <SelectValue placeholder={t('choisirUnType')} />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#1E1E1E] border-white/10 max-h-60">
-                      {timeSlots.map((slot) => (
-                        <SelectItem key={slot} value={slot} className="hover:bg-[#D4AF37]/10">
-                          {slot}
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="bg-[#1E1E1E] border-white/10">
+                      <SelectItem value="simple" className="hover:bg-[#D4AF37]/10">{t('sensUnique')}</SelectItem>
+                      <SelectItem value="retour" className="hover:bg-[#D4AF37]/10">{t('allerRetour')}</SelectItem>
+                      <SelectItem value="disposition" className="hover:bg-[#D4AF37]/10">{t('miseDisposition')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              {/* Pickup & Dropoff */}
-              <div className="space-y-4 mb-6">
-                <div className="space-y-2">
-                  <Label htmlFor="pickup" className="text-[#A1A1AA] text-sm">{t('lieuPriseEnCharge')}</Label>
-                  <div className="relative">
-                    <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D4AF37]" />
-                    <Input
-                      id="pickup"
-                      value={pickup}
-                      onChange={(e) => setPickup(e.target.value)}
-                      placeholder={t('adresseDepart')}
-                      className="pl-10 bg-[#1E1E1E] border-white/10 focus:border-[#D4AF37]/50"
-                      data-testid="pickup-input"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dropoff" className="text-[#A1A1AA] text-sm">{t('lieuDepot')}</Label>
-                  <div className="relative">
-                    <MapPin size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#D4AF37]" />
-                    <Input
-                      id="dropoff"
-                      value={dropoff}
-                      onChange={(e) => setDropoff(e.target.value)}
-                      placeholder={t('adresseArrivee')}
-                      className="pl-10 bg-[#1E1E1E] border-white/10 focus:border-[#D4AF37]/50"
-                      data-testid="dropoff-input"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Transfer Type */}
-              <div className="space-y-2 mb-8">
-                <Label className="text-[#A1A1AA] text-sm">{t('typeTransfert')}</Label>
-                <Select value={transferType} onValueChange={setTransferType}>
-                  <SelectTrigger className="bg-[#1E1E1E] border-white/10 hover:border-[#D4AF37]/50" data-testid="transfer-type-select">
-                    <SelectValue placeholder={t('choisirUnType')} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1E1E1E] border-white/10">
-                    <SelectItem value="simple" className="hover:bg-[#D4AF37]/10">{t('sensUnique')}</SelectItem>
-                    <SelectItem value="retour" className="hover:bg-[#D4AF37]/10">{t('allerRetour')}</SelectItem>
-                    <SelectItem value="disposition" className="hover:bg-[#D4AF37]/10">{t('miseDisposition')}</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               {/* Submit Button */}
@@ -199,7 +201,7 @@ const BookingSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="h-full rounded-2xl overflow-hidden"
+            className="h-full min-h-[600px] rounded-2xl overflow-hidden"
           >
             <InteractiveMap />
           </motion.div>
