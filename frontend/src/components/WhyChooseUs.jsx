@@ -1,28 +1,6 @@
 import { motion } from 'framer-motion';
 import { ShieldCheck, Clock, Star, Car } from '@phosphor-icons/react';
-
-const features = [
-  {
-    icon: Clock,
-    title: 'Ponctualité',
-    description: 'Toujours à l\'heure, suivi en temps réel de votre chauffeur.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Sécurité',
-    description: 'Chauffeurs vérifiés et véhicules régulièrement contrôlés.',
-  },
-  {
-    icon: Star,
-    title: 'Excellence',
-    description: 'Service premium avec attention aux moindres détails.',
-  },
-  {
-    icon: Car,
-    title: 'Confort',
-    description: 'Véhicules haut de gamme, climatisés et parfaitement entretenus.',
-  },
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -44,6 +22,31 @@ const itemVariants = {
 };
 
 const WhyChooseUs = () => {
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      icon: Clock,
+      titleKey: 'ponctualite',
+      descKey: 'ponctualiteDesc',
+    },
+    {
+      icon: ShieldCheck,
+      titleKey: 'securite',
+      descKey: 'securiteDesc',
+    },
+    {
+      icon: Star,
+      titleKey: 'excellence',
+      descKey: 'excellenceDesc',
+    },
+    {
+      icon: Car,
+      titleKey: 'confort',
+      descKey: 'confortDesc',
+    },
+  ];
+
   return (
     <section id="apropos" className="py-24 md:py-32 bg-[#0A0A0A]" data-testid="why-choose-us-section">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -55,11 +58,11 @@ const WhyChooseUs = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="text-[#D4AF37] text-sm tracking-[0.3em] uppercase">Pourquoi Nous</span>
+          <span className="text-[#D4AF37] text-sm tracking-[0.3em] uppercase">{t('pourquoiNousLabel')}</span>
           <h2 className="text-4xl md:text-5xl font-bold font-['Cormorant_Garamond'] mt-4 tracking-tight" data-testid="why-choose-us-title">
-            Pourquoi choisir
+            {t('whyChooseTitle1')}
             <br />
-            <span className="gold-text">Econnect VTC ?</span>
+            <span className="gold-text">{t('whyChooseTitle2')}</span>
           </h2>
         </motion.div>
 
@@ -82,10 +85,10 @@ const WhyChooseUs = () => {
                 <feature.icon size={32} weight="light" className="text-[#D4AF37]" />
               </div>
               <h3 className="text-xl font-bold font-['Cormorant_Garamond'] mb-3">
-                {feature.title}
+                {t(feature.titleKey)}
               </h3>
               <p className="text-[#A1A1AA] text-sm leading-relaxed">
-                {feature.description}
+                {t(feature.descKey)}
               </p>
             </motion.div>
           ))}

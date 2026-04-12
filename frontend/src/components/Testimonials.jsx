@@ -1,22 +1,23 @@
 import { motion } from 'framer-motion';
 import { Star, Quotes } from '@phosphor-icons/react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const testimonials = [
   {
     name: 'Marie D.',
     role: 'Cadre dirigeante',
-    content: 'Service impeccable pour mes déplacements professionnels. Les chauffeurs sont toujours ponctuels et les véhicules d\'une propreté irréprochable.',
+    content: "Service impeccable pour mes déplacements professionnels. Les chauffeurs sont toujours ponctuels et les véhicules d'une propreté irréprochable.",
     rating: 5,
   },
   {
     name: 'Thomas B.',
     role: 'Voyageur fréquent',
-    content: 'J\'utilise Econnect VTC pour tous mes transferts aéroport. Le suivi en temps réel et l\'accueil avec pancarte sont un vrai plus.',
+    content: "J'utilise Econnect VTC pour tous mes transferts aéroport. Le suivi en temps réel et l'accueil avec pancarte sont un vrai plus.",
     rating: 5,
   },
   {
     name: 'Sophie L.',
-    role: 'Organisatrice d\'événements',
+    role: "Organisatrice d'événements",
     content: 'Partenaire de confiance pour nos événements corporate. La gestion de groupe est parfaitement coordonnée.',
     rating: 5,
   },
@@ -42,6 +43,8 @@ const itemVariants = {
 };
 
 const Testimonials = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="py-24 md:py-32 bg-[#141414]" data-testid="testimonials-section">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -53,11 +56,11 @@ const Testimonials = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="text-[#D4AF37] text-sm tracking-[0.3em] uppercase">Témoignages</span>
+          <span className="text-[#D4AF37] text-sm tracking-[0.3em] uppercase">{t('temoignagesLabel')}</span>
           <h2 className="text-4xl md:text-5xl font-bold font-['Cormorant_Garamond'] mt-4 tracking-tight" data-testid="testimonials-title">
-            Ce que disent
+            {t('testimonialsTitle1')}
             <br />
-            <span className="gold-text">nos clients</span>
+            <span className="gold-text">{t('testimonialsTitle2')}</span>
           </h2>
         </motion.div>
 

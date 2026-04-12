@@ -2,25 +2,19 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { List, X, CaretDown } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const LANGUAGES = [
-  { code: 'fr', flag: '🇫🇷' },
-  { code: 'en', flag: '🇬🇧' },
-  { code: 'es', flag: '🇪🇸' },
-];
-
-const GAMME_ITEMS = [
-  'Comfort Classique',
-  'Comfort Premium',
-  'Prestige',
-  'Van',
+  { code: 'fr', label: 'FR' },
+  { code: 'en', label: 'GB' },
+  { code: 'es', label: 'ES' },
 ];
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isGammeOpen, setIsGammeOpen] = useState(false);
-  const [activeLang, setActiveLang] = useState('fr');
+  const { language, setLanguage, t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -31,10 +25,17 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: 'Accueil', href: '#accueil' },
-    { name: 'Services', href: '#services' },
-    { name: 'À propos', href: '#apropos' },
-    { name: 'Contact', href: '#contact' },
+    { key: 'accueil', href: '#accueil' },
+    { key: 'services', href: '#services' },
+    { key: 'apropos', href: '#apropos' },
+    { key: 'contact', href: '#contact' },
+  ];
+
+  const GAMME_ITEMS = [
+    { key: 'comfortClassique', href: '#gammes' },
+    { key: 'comfortPremium', href: '#gammes' },
+    { key: 'prestige', href: '#gammes' },
+    { key: 'van', href: '#gammes' },
   ];
 
   return (
@@ -59,12 +60,12 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <a
-              key={link.name}
+              key={link.key}
               href={link.href}
               className="text-[#A1A1AA] hover:text-[#D4AF37] transition-colors duration-300 text-sm tracking-wide uppercase"
-              data-testid={`nav-link-${link.name.toLowerCase()}`}
+              data-testid={`nav-link-${link.key}`}
             >
-              {link.name}
+              {t(link.key)}
             </a>
           ))}
 
@@ -78,7 +79,7 @@ const Navbar = () => {
               className="flex items-center gap-1 text-[#A1A1AA] hover:text-[#D4AF37] transition-colors duration-300 text-sm tracking-wide uppercase"
               data-testid="nav-link-gamme"
             >
-              Gamme <CaretDown size={14} className={`transition-transform duration-200 ${isGammeOpen ? 'rotate-180' : ''}`} />
+              {t('gamme')} <CaretDown size={14} className={`transition-transform duration-200 ${isGammeOpen ? 'rotate-180' : ''}`} />
             </button>
 
             <AnimatePresence>
@@ -93,13 +94,13 @@ const Navbar = () => {
                 >
                   {GAMME_ITEMS.map((item) => (
                     <a
-                      key={item}
-                      href="#gammes"
+                      key={item.key}
+                      href={item.href}
                       className="block px-4 py-3 text-sm transition-colors duration-200 hover:bg-[#232323]"
                       style={{ color: '#C7B588' }}
                       onClick={() => setIsGammeOpen(false)}
                     >
-                      {item}
+                      {t(item.key)}
                     </a>
                   ))}
                 </motion.div>
@@ -110,18 +111,23 @@ const Navbar = () => {
 
         {/* Right-side actions (desktop) */}
         <div className="hidden md:flex items-center gap-3">
-          {/* Language flags */}
+          {/* Language selectors */}
           <div className="flex items-center gap-1 mr-2">
             {LANGUAGES.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => setActiveLang(lang.code)}
-                className="text-2xl leading-none p-1 rounded transition-opacity duration-200"
-                style={{ opacity: activeLang === lang.code ? 1 : 0.5, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif" }}
-                title={lang.code.toUpperCase()}
+                onClick={() => setLanguage(lang.code)}
+                className="text-xs font-bold leading-none px-2 py-1 rounded transition-colors duration-200"
+                style={{
+                  color: language === lang.code ? '#D4AF37' : '#A1A1AA',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+                title={lang.label}
                 data-testid={`lang-${lang.code}`}
               >
-                {lang.flag}
+                {lang.label}
               </button>
             ))}
           </div>
@@ -133,7 +139,7 @@ const Navbar = () => {
             style={{ background: '#D4AF37', color: '#0A0A0A' }}
             data-testid="cta-reserver"
           >
-            Réserver
+            {t('reserver')}
           </a>
 
           {/* Connexion button */}
@@ -149,7 +155,7 @@ const Navbar = () => {
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#D4AF37'; }}
             data-testid="btn-connexion"
           >
-            Connexion
+            {t('connexion')}
           </Link>
 
           {/* S'inscrire button */}
@@ -161,7 +167,7 @@ const Navbar = () => {
             onMouseLeave={e => { e.currentTarget.style.background = '#D4AF37'; }}
             data-testid="btn-sinscrire"
           >
-            S'inscrire
+            {t('sinscrire')}
           </Link>
         </div>
 
@@ -188,43 +194,48 @@ const Navbar = () => {
             <div className="px-6 py-6 flex flex-col gap-4">
               {navLinks.map((link) => (
                 <a
-                  key={link.name}
+                  key={link.key}
                   href={link.href}
                   className="text-[#A1A1AA] hover:text-[#D4AF37] transition-colors py-2 text-lg"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {link.name}
+                  {t(link.key)}
                 </a>
               ))}
 
               {/* Gamme sub-items in mobile */}
               <div>
-                <p className="text-[#A1A1AA] text-sm uppercase tracking-wide py-1">Gamme</p>
+                <p className="text-[#A1A1AA] text-sm uppercase tracking-wide py-1">{t('gamme')}</p>
                 <div className="pl-4 flex flex-col gap-2 mt-1">
                   {GAMME_ITEMS.map((item) => (
                     <a
-                      key={item}
-                      href="#gammes"
+                      key={item.key}
+                      href={item.href}
                       className="py-1 text-base transition-colors duration-200"
                       style={{ color: '#C7B588' }}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      {item}
+                      {t(item.key)}
                     </a>
                   ))}
                 </div>
               </div>
 
-              {/* Language flags */}
+              {/* Language selectors */}
               <div className="flex items-center gap-3 py-2">
                 {LANGUAGES.map((lang) => (
                   <button
                     key={lang.code}
-                    onClick={() => setActiveLang(lang.code)}
-                    className="text-2xl"
-                    style={{ opacity: activeLang === lang.code ? 1 : 0.5, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif" }}
+                    onClick={() => setLanguage(lang.code)}
+                    className="text-xs font-bold px-2 py-1 rounded transition-colors duration-200"
+                    style={{
+                      color: language === lang.code ? '#D4AF37' : '#A1A1AA',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
                   >
-                    {lang.flag}
+                    {lang.label}
                   </button>
                 ))}
               </div>
@@ -236,7 +247,7 @@ const Navbar = () => {
                 style={{ background: '#D4AF37', color: '#0A0A0A' }}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Réserver
+                {t('reserver')}
               </a>
 
               {/* Connexion */}
@@ -246,7 +257,7 @@ const Navbar = () => {
                 style={{ border: '1.5px solid #D4AF37', color: '#D4AF37', background: 'transparent' }}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Connexion
+                {t('connexion')}
               </Link>
 
               {/* S'inscrire */}
@@ -256,7 +267,7 @@ const Navbar = () => {
                 style={{ background: '#D4AF37', color: '#232323' }}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                S'inscrire
+                {t('sinscrire')}
               </Link>
             </div>
           </motion.div>

@@ -1,8 +1,11 @@
 import { motion } from 'framer-motion';
 import { CaretDown } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Hero = () => {
+  const { t } = useLanguage();
+
   return (
     <section
       id="accueil"
@@ -30,7 +33,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
         >
           <span className="inline-block text-[#D4AF37] text-sm md:text-base tracking-[0.3em] uppercase mb-6">
-            Service VTC Premium
+            {t('serviceVtcPremium')}
           </span>
         </motion.div>
 
@@ -41,9 +44,9 @@ const Hero = () => {
           className="text-5xl md:text-7xl lg:text-8xl font-bold font-['Cormorant_Garamond'] tracking-tighter leading-none mb-6"
           data-testid="hero-title"
         >
-          Plus qu'un trajet,
+          {t('heroTitle1')}
           <br />
-          <span className="gold-text">une expérience</span>
+          <span className="gold-text">{t('heroTitle2')}</span>
         </motion.h1>
 
         <motion.p
@@ -53,8 +56,7 @@ const Hero = () => {
           className="text-[#A1A1AA] text-lg md:text-xl max-w-2xl mx-auto mb-10"
           data-testid="hero-subtitle"
         >
-          Ponctualité rigoureuse, chauffeurs professionnels et véhicules entretenus.
-          Votre partenaire mobilité au quotidien.
+          {t('heroSubtitle')}
         </motion.p>
 
         <motion.div
@@ -69,7 +71,7 @@ const Hero = () => {
             className="bg-[#D4AF37] hover:bg-[#F0C74A] text-[#0A0A0A] font-semibold px-10 py-6 text-lg transition-all duration-300 hover:scale-105"
             data-testid="hero-cta-reserver"
           >
-            <a href="#reserver">Réserver maintenant</a>
+            <a href="#reserver">{t('reserverMaintenant')}</a>
           </Button>
           <Button
             asChild
@@ -78,7 +80,7 @@ const Hero = () => {
             className="border-[#D4AF37] text-[#D4AF37] hover:bg-[#D4AF37]/10 px-10 py-6 text-lg transition-all duration-300"
             data-testid="hero-cta-services"
           >
-            <a href="#services">Nos services</a>
+            <a href="#services">{t('nosServices')}</a>
           </Button>
         </motion.div>
       </div>
@@ -91,7 +93,7 @@ const Hero = () => {
         className="absolute bottom-10 left-1/2 -translate-x-1/2"
       >
         <a href="#services" className="flex flex-col items-center text-[#A1A1AA] hover:text-[#D4AF37] transition-colors">
-          <span className="text-xs tracking-widest uppercase mb-2">Découvrir</span>
+          <span className="text-xs tracking-widest uppercase mb-2">{t('decouvrir')}</span>
           <motion.div
             animate={{ y: [0, 8, 0] }}
             transition={{ repeat: Infinity, duration: 1.5 }}
