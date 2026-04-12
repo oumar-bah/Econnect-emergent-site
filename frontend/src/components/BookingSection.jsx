@@ -41,7 +41,7 @@ const BookingSection = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const message = `Bonjour, je souhaite réserver un VTC:\n- Date: ${date ? format(date, 'dd/MM/yyyy', { locale: fr }) : 'Non spécifiée'}\n- Heure: ${time || 'Non spécifiée'}\n- Départ: ${pickup || 'Non spécifié'}\n- Arrivée: ${dropoff || 'Non spécifiée'}\n- Type: ${transferType || 'Non spécifié'}`;
+    const message = `Bonjour, je souhaite réserver un VTC:\n- Date: ${date ? format(date, 'dd/MM/yyyy', { locale: fr }) : 'Non spécifiée'}\n- Heure: ${time || 'Non spécifiée'}\n- Départ: ${pickup || 'Non spécifié'}\n- Arrivée: ${dropoff || 'Non spécifié'}\n- Type: ${transferType || 'Non spécifié'}`;
     window.open(`https://wa.me/33XXXXXXXXX?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -64,16 +64,15 @@ const BookingSection = () => {
           </h2>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Booking Form */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="h-full"
           >
-            <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 md:p-10 h-full" data-testid="booking-form">
+            <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 md:p-10" data-testid="booking-form">
               {/* Steps */}
               <div className="flex items-center justify-between mb-8">
                 {[1, 2, 3].map((step) => (
@@ -199,7 +198,7 @@ const BookingSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="h-full min-h-[400px] rounded-2xl overflow-hidden"
+            className="h-[400px] lg:h-full min-h-[500px] rounded-2xl overflow-hidden"
           >
             <InteractiveMap />
           </motion.div>
