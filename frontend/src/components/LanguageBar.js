@@ -9,7 +9,7 @@ const LANGUAGES = [
 ];
 
 const LanguageBar = () => {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
 
   return (
     <div className="language-bar">
@@ -29,8 +29,8 @@ const LanguageBar = () => {
             {lang.label}
           </button>
         ))}
-        <a href="/login" className="action-btn">Connexion</a>
-        <a href="/register" className="action-btn action-btn--primary">S'inscrire</a>
+        <a href="/login" className="action-btn">{t('connexion')}</a>
+        <a href="/register" className="action-btn action-btn--primary">{t('sinscrire')}</a>
       </div>
     </div>
   );
