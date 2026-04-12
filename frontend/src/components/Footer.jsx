@@ -1,7 +1,18 @@
 import { motion } from 'framer-motion';
 import { Phone, Envelope, MapPin, InstagramLogo, FacebookLogo, LinkedinLogo } from '@phosphor-icons/react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Footer = () => {
+  const { t } = useLanguage();
+
+  const navLinks = [
+    { key: 'footerNavAccueil', href: '#accueil' },
+    { key: 'footerNavServices', href: '#services' },
+    { key: 'footerNavReserver', href: '#reserver' },
+    { key: 'footerNavApropos', href: '#apropos' },
+    { key: 'footerNavContact', href: '#contact' },
+  ];
+
   return (
     <footer id="contact" className="py-24 bg-[#0A0A0A] border-t border-white/5" data-testid="footer">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -17,7 +28,7 @@ const Footer = () => {
               Econnect VTC
             </motion.h2>
             <p className="text-[#A1A1AA] max-w-md leading-relaxed mb-6">
-              Votre partenaire mobilité premium. Service VTC de qualité pour tous vos déplacements professionnels et personnels.
+              {t('footerBrandDesc')}
             </p>
             <div className="flex gap-4">
               <a
@@ -46,15 +57,15 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold mb-6">Navigation</h3>
+            <h3 className="text-lg font-semibold mb-6">{t('navigation')}</h3>
             <ul className="space-y-3">
-              {['Accueil', 'Services', 'Réserver', 'À propos', 'Contact'].map((link) => (
-                <li key={link}>
+              {navLinks.map((link) => (
+                <li key={link.key}>
                   <a
-                    href={`#${link.toLowerCase().replace(' ', '').replace('à', 'a')}`}
+                    href={link.href}
                     className="text-[#A1A1AA] hover:text-[#D4AF37] transition-colors"
                   >
-                    {link}
+                    {t(link.key)}
                   </a>
                 </li>
               ))}
@@ -63,7 +74,7 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-semibold mb-6">Contact</h3>
+            <h3 className="text-lg font-semibold mb-6">{t('contact')}</h3>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <Phone size={20} className="text-[#D4AF37] mt-1" />
@@ -90,14 +101,14 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-[#A1A1AA] text-sm">
-            © 2025 Econnect VTC. Tous droits réservés.
+            {t('copyright')}
           </p>
           <div className="flex gap-6">
             <a href="#" className="text-[#A1A1AA] text-sm hover:text-[#D4AF37] transition-colors">
-              Mentions légales
+              {t('mentionsLegales')}
             </a>
             <a href="#" className="text-[#A1A1AA] text-sm hover:text-[#D4AF37] transition-colors">
-              Politique de confidentialité
+              {t('politiqueConfidentialite')}
             </a>
           </div>
         </div>

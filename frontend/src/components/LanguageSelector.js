@@ -1,12 +1,36 @@
 import React from 'react';
-import './LanguageSelector.css';
+import { useLanguage } from '@/contexts/LanguageContext';
 
-const LanguageSelector = () => (
-  <div className="language-bar">
-    <button title="Français">🇫🇷</button>
-    <button title="English">🇬🇧</button>
-    <button title="Español">🇪🇸</button>
-  </div>
-);
+const LANGUAGES = [
+  { code: 'fr', label: 'FR' },
+  { code: 'en', label: 'GB' },
+  { code: 'es', label: 'ES' },
+];
+
+const LanguageSelector = () => {
+  const { language, setLanguage } = useLanguage();
+
+  return (
+    <div className="language-bar">
+      {LANGUAGES.map((lang) => (
+        <button
+          key={lang.code}
+          title={lang.label}
+          onClick={() => setLanguage(lang.code)}
+          style={{
+            fontWeight: 'bold',
+            color: language === lang.code ? '#D4AF37' : '#A1A1AA',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: '4px 8px',
+          }}
+        >
+          {lang.label}
+        </button>
+      ))}
+    </div>
+  );
+};
 
 export default LanguageSelector;

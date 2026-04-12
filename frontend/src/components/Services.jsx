@@ -1,49 +1,7 @@
 import { motion } from 'framer-motion';
 import { Car, Clock, Airplane, Buildings } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
-
-const services = [
-  {
-    id: 'trajets',
-    title: 'Trajets Ponctuels',
-    subtitle: 'Votre mobilité quotidienne simplifiée',
-    description: 'Réservation rapide, chauffeurs professionnels et discrets, véhicules confortables et entretenus.',
-    icon: Car,
-    image: 'https://images.pexels.com/photos/15774577/pexels-photo-15774577.jpeg',
-    colSpan: 'md:col-span-6',
-    rowSpan: '',
-  },
-  {
-    id: 'disposition',
-    title: 'Mise à Disposition',
-    subtitle: 'Chauffeur Privé',
-    description: 'Idéal pour shopping, rendez-vous professionnels ou événements privés. Durée et kilométrage ajustables.',
-    icon: Clock,
-    image: 'https://images.pexels.com/photos/8425052/pexels-photo-8425052.jpeg',
-    colSpan: 'md:col-span-6',
-    rowSpan: '',
-  },
-  {
-    id: 'transferts',
-    title: 'Transferts Gares & Aéroports',
-    subtitle: 'Voyagez en toute sérénité',
-    description: 'Accueil personnalisé avec pancarte nominative. Suivi en temps réel des horaires. Assistance bagages.',
-    icon: Airplane,
-    image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800',
-    colSpan: 'md:col-span-4',
-    rowSpan: 'md:row-span-2',
-  },
-  {
-    id: 'affaires',
-    title: 'Affaires & Événementiel',
-    subtitle: "L'excellence au service de votre image",
-    description: 'Chauffeurs en tenue professionnelle. Discrétion et confidentialité garanties. Gestion logistique de groupe.',
-    icon: Buildings,
-    image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg',
-    colSpan: 'md:col-span-8',
-    rowSpan: '',
-  },
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -65,6 +23,51 @@ const itemVariants = {
 };
 
 const Services = () => {
+  const { t } = useLanguage();
+
+  const services = [
+    {
+      id: 'trajets',
+      titleKey: 'trajetsPonctuels',
+      subtitleKey: 'trajetsPonctuelsSubtitle',
+      descKey: 'trajetsPonctuelsDesc',
+      icon: Car,
+      image: 'https://images.pexels.com/photos/15774577/pexels-photo-15774577.jpeg',
+      colSpan: 'md:col-span-6',
+      rowSpan: '',
+    },
+    {
+      id: 'disposition',
+      titleKey: 'miseDispositionTitle',
+      subtitleKey: 'miseDispositionSubtitle',
+      descKey: 'miseDispositionDesc',
+      icon: Clock,
+      image: 'https://images.pexels.com/photos/8425052/pexels-photo-8425052.jpeg',
+      colSpan: 'md:col-span-6',
+      rowSpan: '',
+    },
+    {
+      id: 'transferts',
+      titleKey: 'transfertsTitle',
+      subtitleKey: 'transfertsSubtitle',
+      descKey: 'transfertsDesc',
+      icon: Airplane,
+      image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=800',
+      colSpan: 'md:col-span-4',
+      rowSpan: 'md:row-span-2',
+    },
+    {
+      id: 'affaires',
+      titleKey: 'affairesTitle',
+      subtitleKey: 'affairesSubtitle',
+      descKey: 'affairesDesc',
+      icon: Buildings,
+      image: 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg',
+      colSpan: 'md:col-span-8',
+      rowSpan: '',
+    },
+  ];
+
   return (
     <section id="services" className="py-24 md:py-32 bg-[#0A0A0A]" data-testid="services-section">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -76,11 +79,11 @@ const Services = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="text-[#D4AF37] text-sm tracking-[0.3em] uppercase">Nos Services</span>
+          <span className="text-[#D4AF37] text-sm tracking-[0.3em] uppercase">{t('nosServicesLabel')}</span>
           <h2 className="text-4xl md:text-5xl font-bold font-['Cormorant_Garamond'] mt-4 tracking-tight" data-testid="services-title">
-            L'excellence au service de
+            {t('servicesTitle1')}
             <br />
-            <span className="gold-text">votre mobilité</span>
+            <span className="gold-text">{t('servicesTitle2')}</span>
           </h2>
         </motion.div>
 
@@ -103,7 +106,7 @@ const Services = () => {
               <div className="absolute inset-0">
                 <img
                   src={service.image}
-                  alt={service.title}
+                  alt={t(service.titleKey)}
                   className="service-card-img w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/60 to-transparent" />
@@ -115,13 +118,13 @@ const Services = () => {
                   <service.icon size={40} weight="light" className="text-[#D4AF37]" />
                 </div>
                 <span className="text-[#D4AF37] text-xs tracking-widest uppercase mb-2">
-                  {service.subtitle}
+                  {t(service.subtitleKey)}
                 </span>
                 <h3 className="text-2xl md:text-3xl font-bold font-['Cormorant_Garamond'] mb-3">
-                  {service.title}
+                  {t(service.titleKey)}
                 </h3>
                 <p className="text-[#A1A1AA] text-sm leading-relaxed mb-4 max-w-md">
-                  {service.description}
+                  {t(service.descKey)}
                 </p>
                 <Button
                   asChild
@@ -129,7 +132,7 @@ const Services = () => {
                   className="w-fit border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0A0A0A] transition-all duration-300"
                   data-testid={`service-${service.id}-cta`}
                 >
-                  <a href="#reserver">Réserver</a>
+                  <a href="#reserver">{t('reserver')}</a>
                 </Button>
               </div>
             </motion.div>

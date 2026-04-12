@@ -1,32 +1,6 @@
 import { motion } from 'framer-motion';
 import { Car } from '@phosphor-icons/react';
-
-const gammes = [
-  {
-    name: 'Comfort Classique',
-    description: 'Berline confortable pour vos trajets quotidiens',
-    price: 'À partir de 30€',
-    image: 'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg',
-  },
-  {
-    name: 'Comfort Premium',
-    description: 'Véhicules haut de gamme pour un confort supérieur',
-    price: 'À partir de 55€',
-    image: 'https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg',
-  },
-  {
-    name: 'Prestige',
-    description: 'Véhicules de luxe pour une expérience exceptionnelle',
-    price: 'À partir de 90€',
-    image: 'https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg',
-  },
-  {
-    name: 'Van',
-    description: 'Véhicules spacieux pour groupes et familles',
-    price: 'À partir de 70€',
-    image: 'https://images.pexels.com/photos/15774577/pexels-photo-15774577.jpeg',
-  },
-];
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -48,6 +22,35 @@ const itemVariants = {
 };
 
 const FleetSection = () => {
+  const { t } = useLanguage();
+
+  const gammes = [
+    {
+      nameKey: 'comfortClassique',
+      descKey: 'comfortClassiqueDesc',
+      price: '30\u20ac',
+      image: 'https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg',
+    },
+    {
+      nameKey: 'comfortPremium',
+      descKey: 'comfortPremiumDesc',
+      price: '55\u20ac',
+      image: 'https://images.pexels.com/photos/3802510/pexels-photo-3802510.jpeg',
+    },
+    {
+      nameKey: 'prestige',
+      descKey: 'prestigeDesc',
+      price: '90\u20ac',
+      image: 'https://images.pexels.com/photos/1545743/pexels-photo-1545743.jpeg',
+    },
+    {
+      nameKey: 'van',
+      descKey: 'vanDesc',
+      price: '70\u20ac',
+      image: 'https://images.pexels.com/photos/15774577/pexels-photo-15774577.jpeg',
+    },
+  ];
+
   return (
     <section id="gammes" className="py-24 md:py-32 bg-[#141414]" data-testid="fleet-section">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
@@ -59,11 +62,11 @@ const FleetSection = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="text-[#D4AF37] text-sm tracking-[0.3em] uppercase">Notre Flotte</span>
+          <span className="text-[#D4AF37] text-sm tracking-[0.3em] uppercase">{t('notreFlotte')}</span>
           <h2 className="text-4xl md:text-5xl font-bold font-['Cormorant_Garamond'] mt-4 tracking-tight" data-testid="fleet-title">
-            Des véhicules
+            {t('fleetTitle1')}
             <br />
-            <span className="gold-text">d'exception</span>
+            <span className="gold-text">{t('fleetTitle2')}</span>
           </h2>
         </motion.div>
 
@@ -86,7 +89,7 @@ const FleetSection = () => {
               <div className="relative h-44 overflow-hidden">
                 <img
                   src={gamme.image}
-                  alt={gamme.name}
+                  alt={t(gamme.nameKey)}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1E1E1E] to-transparent opacity-60" />
@@ -98,13 +101,13 @@ const FleetSection = () => {
               {/* Card content */}
               <div className="p-6">
                 <h3 className="text-lg font-bold font-['Cormorant_Garamond'] mb-2">
-                  {gamme.name}
+                  {t(gamme.nameKey)}
                 </h3>
                 <p className="text-[#A1A1AA] text-sm leading-relaxed mb-4">
-                  {gamme.description}
+                  {t(gamme.descKey)}
                 </p>
                 <span className="text-[#D4AF37] text-sm font-semibold">
-                  {gamme.price}
+                  {t('aPartirDe')} {gamme.price}
                 </span>
               </div>
             </motion.div>
