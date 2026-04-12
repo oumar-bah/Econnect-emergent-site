@@ -3,9 +3,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import './LanguageBar.css';
 
 const LANGUAGES = [
-  { code: 'fr', label: 'FR' },
-  { code: 'en', label: 'GB' },
-  { code: 'es', label: 'ES' },
+  { code: 'fr', label: '🇫🇷' },
+  { code: 'en', label: '🇬🇧' },
+  { code: 'es', label: '🇪🇸' },
 ];
 
 const LanguageBar = () => {

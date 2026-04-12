@@ -5,9 +5,9 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const LANGUAGES = [
-  { code: 'fr', label: 'FR' },
-  { code: 'en', label: 'GB' },
-  { code: 'es', label: 'ES' },
+  { code: 'fr', label: '🇫🇷' },
+  { code: 'en', label: '🇬🇧' },
+  { code: 'es', label: '🇪🇸' },
 ];
 
 const Navbar = () => {
@@ -117,7 +117,7 @@ const Navbar = () => {
               <button
                 key={lang.code}
                 onClick={() => setLanguage(lang.code)}
-                className="text-xs font-bold leading-none px-2 py-1 rounded transition-colors duration-200"
+                className="text-base font-bold leading-none px-2 py-1 rounded transition-colors duration-200"
                 style={{
                   color: language === lang.code ? '#D4AF37' : '#A1A1AA',
                   background: 'none',
@@ -227,7 +227,7 @@ const Navbar = () => {
                   <button
                     key={lang.code}
                     onClick={() => setLanguage(lang.code)}
-                    className="text-xs font-bold px-2 py-1 rounded transition-colors duration-200"
+                    className="text-base font-bold px-2 py-1 rounded transition-colors duration-200"
                     style={{
                       color: language === lang.code ? '#D4AF37' : '#A1A1AA',
                       background: 'none',
